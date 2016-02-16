@@ -143,7 +143,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public Tree dvs(int v){
-        List<Integer> searchOrders = new ArrayList<Integer>();
+        List<Integer> searchOrders = new java.util.ArrayList<Integer>();
         int[] parent = new int[vertices.length];
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -170,16 +170,114 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public Tree bfs(int v){
-        List<In
+        List<Integer> searchOrders = new java.util.ArrayList<Integer>();
+        int[] parent = new int[vertices.length];
+        
+        for(int i = 0; i < parent.length; i = i + 1){
+            parent[i] = -1;
+        }
+        
+        java.util.LinkedList<Integer> queue = new java.util.LinkedList<Integer>();
+        
+        boolean[] isVisited = new boolean[vertices.length];
+        
+        queue.offer(v);
+        isVisited[v] = true;
+        
+        while(! queue.isEmpty()){
+            int u = queue.poll();
+            searchOrders.add(u);
+            for(int w: neighbors[u]){
+                if(!isVisited[w]){
+                    queue.offer(w);
+                    parent[w] = u;
+                    isVisited[w] = true;
+                }
+            }
+        }
+        
+        return new Tree(v, parent, searchOrders);
     }
     
-    
-    
-    public static class Tree{
+    public class Tree{
+        private int root;
+        private int[] parent;
+        private java.util.List<Integer> searchOrders;
         
-    }
-    
-    public static class PathIterator implements java.util.Iterator{
+        public Tree(int root, int[] parent, List<Integer> searchOrders){
+            this.root = root;
+            this.parent = parent;
+            this.searchOrders = searchOrders;
+        }
         
+        public Tree(int root, int[] parent){
+            this.root = root;
+            this.parent = parent;
+        }
+        
+        public int getRoot(){
+            return root;
+        }
+        
+        public int getParent(int v){
+            return parent[v];
+        }
+        
+        public List<Integer> getSearchOrders(){
+            return searchOrders;
+        }
+        
+        public int getNumberOfVerticesFound(){
+            return searchOrders.size();
+        }
+        
+        public java.util.Iterator pathIterator(int v){
+            return new PathIterator(v);
+        }
+        
+        public class PathIterator implements java.util.Iterator{
+            private java.util.Stack<Integer> stack;
+            
+            public PathIterator(int v){
+                stack = new java.util.Stack<Integer>();
+                do{
+                    stack.push(v);
+                    v = parent[v];
+                }while( v != -1);
+            }
+            
+            public boolean hasNext(){
+                return ! stack.isEmpty();
+            }
+            
+            public Object next(){
+                return vertices[stack.pop()];
+            }
+            
+            public void remove(){
+                //do nothing;
+            }
+            
+        }
+        
+        public void printPath(int v){
+            java.util.Iterator iter = pathIterator(v);
+            System.out.print("A path from " + vertices[root] + " to " + vertices[v] + ": ");
+            while( iter.hasNext()){
+                System.out.print(iter.next() + " ");
+            }
+            
+        }
+        
+        public void printTree(){
+            System.out.println("Root is: " + vertices[root]);
+            System.out.print("Edges: ");
+            for(int i = 0; i < parent.length; i = i + 1){
+                if(parent[i] != -1){
+                    System.out.print("(" + vertices[parent[i]] + ", " + vertices[i] + ") ");
+                }
+            }
+            System.out.println();
+        }   
     }
 }
