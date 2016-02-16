@@ -142,7 +142,7 @@ public abstract class AbstractGraph implements Graph{
         }
     }
     
-    public Tree dvs(int v){
+    public Tree dfs(int v){
         List<Integer> searchOrders = new java.util.ArrayList<Integer>();
         int[] parent = new int[vertices.length];
         for(int i = 0; i < parent.length; i = i + 1){

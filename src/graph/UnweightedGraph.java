@@ -10,5 +10,19 @@ package graph;
  * @author Diego
  */
 public class UnweightedGraph extends AbstractGraph{
+    public UnweightedGraph(int[][] edges, Object[] vertices){
+        super(edges,vertices);
+    }
     
+    public UnweightedGraph(java.util.List<Edge> edges, java.util.List vertices){
+        super(edges,vertices);
+    }
+    
+    public UnweightedGraph(java.util.List<Edge> edges, int numberOfVertices){
+        super(edges, numberOfVertices);
+    }
+    
+    public UnweightedGraph(int[][] edges, int numberOfVertices){
+        super(edges, numberOfVertices);
+    }
 }
