@@ -200,9 +200,9 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public class Tree{
-        private int root;
-        private int[] parent;
-        private java.util.List<Integer> searchOrders;
+        private int root;// the root of the tree
+        private int[] parent;//given the vetex contains the parent in the tree
+        private java.util.List<Integer> searchOrders;//order in which the vertices were traversed
         
         public Tree(int root, int[] parent, List<Integer> searchOrders){
             this.root = root;

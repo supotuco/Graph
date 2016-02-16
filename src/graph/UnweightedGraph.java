@@ -25,4 +25,11 @@ public class UnweightedGraph extends AbstractGraph{
     public UnweightedGraph(int[][] edges, int numberOfVertices){
         super(edges, numberOfVertices);
     }
+    
+    public Tree dvs(int v){
+        java.util.Stack<Integer> vertexStack = new java.util.Stack<>();
+        vertexStack.push(v);
+        int[] parent = new int[vertices.length];
+    }
+    
 }
