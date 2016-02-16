@@ -26,17 +26,19 @@ public class UnweightedGraph extends AbstractGraph{
         super(edges, numberOfVertices);
     }
     
-    public Tree dvs(int v){
+    @Override
+    public Tree dfs(int v){
         java.util.Stack<Integer> vertexStack = new java.util.Stack<>();
         vertexStack.push(v);
         int[] parent = new int[vertices.length];
         parent[v] = -1;
         boolean[] seenBefore = new boolean[vertices.length];
-        
+        java.util.ArrayList<Integer> searchOrder = new java.util.ArrayList<>();
         
         
         while( ! vertexStack.isEmpty() ){
             int topV = vertexStack.pop();
+            searchOrder.add(topV);
             seenBefore[topV] = true;
             for(int i = 0; i < neighbors[topV].size(); i = i + 1){
                 if( ! seenBefore[neighbors[topV].get(i)] ){
@@ -46,7 +48,7 @@ public class UnweightedGraph extends AbstractGraph{
             }
         }
         
-        return new Tree(v, parent);
+        return new Tree(v, parent, searchOrder);
         
     }
     

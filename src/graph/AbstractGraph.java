@@ -77,6 +77,10 @@ public abstract class AbstractGraph implements Graph{
         return vertices.length;
     }
     
+    public Object getVertex(int index){
+        return vertices[index];
+    }
+    
     public Object[] getVertices(){
         
         return vertices;
