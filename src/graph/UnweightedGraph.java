@@ -30,6 +30,24 @@ public class UnweightedGraph extends AbstractGraph{
         java.util.Stack<Integer> vertexStack = new java.util.Stack<>();
         vertexStack.push(v);
         int[] parent = new int[vertices.length];
+        parent[v] = -1;
+        boolean[] seenBefore = new boolean[vertices.length];
+        
+        
+        
+        while( ! vertexStack.isEmpty() ){
+            int topV = vertexStack.pop();
+            seenBefore[topV] = true;
+            for(int i = 0; i < neighbors[topV].size(); i = i + 1){
+                if( ! seenBefore[neighbors[topV].get(i)] ){
+                    parent[neighbors[topV].get(i)] = topV;
+                    vertexStack.push(neighbors[topV].get(i));
+                }
+            }
+        }
+        
+        return new Tree(v, parent);
+        
     }
     
 }
