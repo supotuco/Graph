@@ -20,7 +20,7 @@ public interface Graph{
     public int getSize();
     public Object[] getVertices();
     public int getIndex(Object obj);
-    public java.util.LinkedList getNeighbors(int v);
+    public java.util.List getNeighbors(int v);
     public int getDegree(int v);
     public int[][] getAdjacencyMatrix();
     public void printAdjacencyMatrix();
