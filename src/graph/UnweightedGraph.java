@@ -38,18 +38,41 @@ public class UnweightedGraph extends AbstractGraph{
         
         while( ! vertexStack.isEmpty() ){
             int topV = vertexStack.pop();
-            searchOrder.add(topV);
-            seenBefore[topV] = true;
-            for(int i = 0; i < neighbors[topV].size(); i = i + 1){
-                if( ! seenBefore[neighbors[topV].get(i)] ){
-                    parent[neighbors[topV].get(i)] = topV;
-                    vertexStack.push(neighbors[topV].get(i));
+            if(! seenBefore[topV]){
+                searchOrder.add(topV);
+                seenBefore[topV] = true;
+                for(int i = 0; i < neighbors[topV].size(); i = i + 1){
+                    if( ! seenBefore[neighbors[topV].get(i)] ){
+                        parent[neighbors[topV].get(i)] = topV;
+                        vertexStack.push(neighbors[topV].get(i));
+                    }
                 }
             }
         }
         
         return new Tree(v, parent, searchOrder);
         
+    }
+    
+    public java.util.List getConnectedComponents(){
+        java.util.List componentRoot = new java.util.ArrayList();
+        
+        boolean[] seenBefore = new boolean[vertices.length];
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( !seenBefore[i]){
+                AbstractGraph.Tree tempTree = bfs(i);// create a spanning tree with root i
+                componentRoot.add(getVertex(i));// add it to the list of root elements
+                
+                java.util.List<Integer> searchOrders = tempTree.getSearchOrders();
+                for(int j = 0; j < searchOrders.size(); j = j + 1){//indicates that they have appeared in a spanning tree;
+                    seenBefore[j] = true;
+                }
+            }
+        }
+            
+        
+        return componentRoot;
     }
     
 }
