@@ -31,6 +31,7 @@ public class UnweightedGraph extends AbstractGraph{
         java.util.Stack<Integer> vertexStack = new java.util.Stack<>();
         vertexStack.push(v);
         int[] parent = new int[vertices.length];
+        
         parent[v] = -1;
         boolean[] seenBefore = new boolean[vertices.length];
         java.util.ArrayList<Integer> searchOrder = new java.util.ArrayList<>();
@@ -63,10 +64,10 @@ public class UnweightedGraph extends AbstractGraph{
             if( !seenBefore[i]){
                 AbstractGraph.Tree tempTree = bfs(i);// create a spanning tree with root i
                 componentRoot.add(getVertex(i));// add it to the list of root elements
-                
+                seenBefore[i] = true;
                 java.util.List<Integer> searchOrders = tempTree.getSearchOrders();
                 for(int j = 0; j < searchOrders.size(); j = j + 1){//indicates that they have appeared in a spanning tree;
-                    seenBefore[j] = true;
+                    seenBefore[searchOrders.get(j)] = true;
                 }
             }
         }

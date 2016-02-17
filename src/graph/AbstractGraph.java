@@ -62,6 +62,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     private void createAdjacencyLists( List<Edge> edges, int numberOfVertices){
+        
         neighbors = new java.util.LinkedList[numberOfVertices];
         
         for(int i = 0; i < numberOfVertices; i = i + 1){
