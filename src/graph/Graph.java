@@ -18,6 +18,7 @@ public interface Graph{
     
     public int getSize();
     public Object[] getVertices();
+    
     public int getIndex(Object obj);
     public Object getVertex(int index);
     public java.util.List getNeighbors(int v);

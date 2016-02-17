@@ -413,16 +413,16 @@ public abstract class AbstractGraph implements Graph{
             if(! seenBefore[i]){
                 java.util.Queue<Integer> vertexList = new java.util.LinkedList<>();
                 vertexList.offer(i);
+                seenBefore[i] = true;
                 
                 while( ! vertexList.isEmpty()){
                     int tempV = vertexList.poll();
-                    seenBefore[tempV] = true;
                     for(int j = 0; j < neighbors[tempV].size(); j = j + 1){
                         if( seenBefore[ neighbors[tempV].get(j) ]){
                             return true;
                         }else{
                             vertexList.offer( neighbors[tempV].get(j) );
-                            
+                            seenBefore[ neighbors[tempV].get(j) ] = true;
                         }
                     }
                 }
@@ -451,10 +451,10 @@ public abstract class AbstractGraph implements Graph{
             if( !seenBefore[i]){
                 java.util.LinkedList<Integer> vertexQueue = new java.util.LinkedList<>();
                 vertexQueue.offer(i);
+                seenBefore[i] = true;
                 
                 while( !vertexQueue.isEmpty()){
                     int tempV = vertexQueue.poll();
-                    seenBefore[tempV] = true;
                     
                     for(int j = 0; j < neighbors[tempV].size(); j = j + 1){
                         if( seenBefore[ neighbors[tempV].get(j) ] ){
@@ -464,6 +464,7 @@ public abstract class AbstractGraph implements Graph{
                         }else{
                             vertexQueue.offer( neighbors[tempV].get(j) );
                             parent[ neighbors[tempV].get(j) ] = tempV;
+                            seenBefore[tempV] = true;
                         }
                     }
                     
@@ -495,10 +496,11 @@ public abstract class AbstractGraph implements Graph{
             if(! seenBefore[i]){
                 java.util.Queue<Integer> vertexList = new java.util.LinkedList<>();
                 vertexList.offer(i);
+                seenBefore[i] = true;
                 
                 while( ! vertexList.isEmpty()){
                     int tempV = vertexList.poll();
-                    seenBefore[tempV] = true;
+                    
                     
                     for(int j = 0; j < neighbors[tempV].size(); j = j + 1){
                         if( seenBefore[ neighbors[tempV].get(j) ]){
@@ -541,6 +543,7 @@ public abstract class AbstractGraph implements Graph{
                         }else{
                             vertexList.offer( neighbors[tempV].get(j) );
                             parent[ neighbors[tempV].get(j) ] = tempV;
+                            seenBefore[ neighbors[tempV].get(j)] = true;
                         }
                     }
                 }
@@ -563,10 +566,10 @@ public abstract class AbstractGraph implements Graph{
             if( !seenBefore[i]){
                 java.util.LinkedList<Integer> vertexQueue = new java.util.LinkedList<>();
                 vertexQueue.offer(i);
+                seenBefore[i] = true;
                 
                 while( !vertexQueue.isEmpty()){
                     int tempV = vertexQueue.poll();
-                    seenBefore[tempV] = true;
                     
                     for(int j = 0; j < neighbors[tempV].size(); j = j + 1){
                         if( seenBefore[ neighbors[tempV].get(j) ] ){
@@ -608,6 +611,7 @@ public abstract class AbstractGraph implements Graph{
                         }else{
                             vertexQueue.offer( neighbors[tempV].get(j) );
                             parent[ neighbors[tempV].get(j) ] = tempV;
+                            seenBefore[ neighbors[tempV].get(j) ] = true;
                         }
                     }
                     
@@ -625,6 +629,104 @@ public abstract class AbstractGraph implements Graph{
         }else{
             return getACycleUndirected();
         }
+    }
+    
+    public boolean isBipartite(){
+        int[] color = new int[vertices.length];// we will color the vertices with 0, or 1
+        //if the color tries to change from 1 to 0 return false;
+        int[] parent = new int[vertices.length];
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            parent[i] = -1;
+            color[i] = -1;
+        }
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if(  color[i] == -1 ){
+                java.util.LinkedList<Integer> bfsQueue = new java.util.LinkedList<>();
+                bfsQueue.offer(i);
+                color[i] = 0;
+                
+                
+                while( ! bfsQueue.isEmpty() ){
+                    int topV = bfsQueue.poll();
+                    
+                    for(int j = 0; j < neighbors[i].size(); j = j + 1){
+                        if(  color[ neighbors[i].get(j) ]  == -1){
+                            bfsQueue.add( neighbors[i].get(j) );
+                            color[neighbors[i].get(j)] = (color[ i ] + 1) % 2;
+                            parent[ neighbors[i].get(j) ] = i;
+                        }else{
+                            if( color[ neighbors[i].get(j) ] != ( color[i] + 1 ) % 2){
+                                return false;
+                            }
+                        }
+                    }
+                    
+                }
+                
+                
+            }
+        }
+        
+        return true;
+    }
+    
+    public List< java.util.HashSet <Integer> > getBipartition(){
+        int[] color = new int[vertices.length];// we will color the vertices with 0, or 1
+        //if the color tries to change from 1 to 0 return false;
+        int[] parent = new int[vertices.length];
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            parent[i] = -1;
+            color[i] = -1;
+        }
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if(  color[i] == -1 ){
+                java.util.LinkedList<Integer> bfsQueue = new java.util.LinkedList<>();
+                bfsQueue.offer(i);
+                color[i] = 0;
+                
+                
+                while( ! bfsQueue.isEmpty() ){
+                    int topV = bfsQueue.poll();
+                    
+                    for(int j = 0; j < neighbors[i].size(); j = j + 1){
+                        if(  color[ neighbors[i].get(j) ]  == -1){
+                            bfsQueue.add( neighbors[i].get(j) );
+                            color[neighbors[i].get(j)] = (color[ i ] + 1) % 2;
+                            parent[ neighbors[i].get(j) ] = i;
+                        }else{
+                            if( color[ neighbors[i].get(j) ] != ( color[i] + 1 ) % 2){
+                                return null;
+                            }
+                        }
+                    }
+                    
+                }
+                
+                
+            }
+        }
+        
+        java.util.List< java.util.HashSet <Integer> > retV = new java.util.ArrayList<>();
+        
+        java.util.HashSet<Integer> zeroColor = new java.util.HashSet<>();
+        java.util.HashSet<Integer> oneColor = new java.util.HashSet<>();
+        
+        for(int i = 0; i < color.length; i = i + 1){
+            if(color[i] == 0){
+                zeroColor.add(i);
+            }else{
+                oneColor.add(i);
+            }
+        }
+        
+        retV.add(zeroColor);
+        retV.add(oneColor);
+        
+        return retV;
     }
     
 }
