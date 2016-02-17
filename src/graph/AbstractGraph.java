@@ -285,4 +285,346 @@ public abstract class AbstractGraph implements Graph{
             System.out.println();
         }   
     }
+    
+    public java.util.List getConnectedComponentObject(){
+        java.util.List componentRoot = new java.util.ArrayList();
+        
+        boolean[] seenBefore = new boolean[vertices.length];
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( !seenBefore[i]){
+                AbstractGraph.Tree tempTree = bfs(i);// create a spanning tree with root i
+                componentRoot.add(getVertex(i));// add it to the list of root elements
+                seenBefore[i] = true;
+                java.util.List<Integer> searchOrders = tempTree.getSearchOrders();
+                for(int j = 0; j < searchOrders.size(); j = j + 1){//indicates that they have appeared in a spanning tree;
+                    seenBefore[searchOrders.get(j)] = true;
+                }
+            }
+        }
+            
+        
+        return componentRoot;
+    }
+    
+    public java.util.List<Integer> getConnectedComponentInt(){
+        java.util.List<Integer> componentRoot = new java.util.ArrayList();
+        
+        boolean[] seenBefore = new boolean[vertices.length];
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( !seenBefore[i]){
+                AbstractGraph.Tree tempTree = bfs(i);// create a spanning tree with root i
+                componentRoot.add(i);// add it to the list of root elements
+                seenBefore[i] = true;
+                java.util.List<Integer> searchOrders = tempTree.getSearchOrders();
+                for(int j = 0; j < searchOrders.size(); j = j + 1){//indicates that they have appeared in a spanning tree;
+                    seenBefore[searchOrders.get(j)] = true;
+                }
+            }
+        }
+            
+        
+        return componentRoot;
+    }
+    
+    public java.util.List getShortestPath(int u, int v){
+        java.util.List pathList = new java.util.ArrayList();
+        
+        if( u == v){
+            pathList.add(u);
+            return pathList;
+        }
+        
+        Tree uTree = this.bfs(u);
+        
+        java.util.Iterator iter = uTree.pathIterator(v);
+        
+        while( iter.hasNext()){
+            pathList.add(iter.next());
+        }
+        
+        
+        return pathList;
+    }
+    
+    public java.util.List getPathDFS(int u, int v){
+        
+        java.util.List pathList = new java.util.ArrayList();
+        
+        if( u == v){
+            pathList.add(u);
+            return pathList;
+        }
+        
+        Tree uTree = this.dfs(u);
+        
+        java.util.Iterator iter = uTree.pathIterator(v);
+        
+        while( iter.hasNext()){
+            pathList.add(iter.next());
+        }
+        
+        
+        return pathList;
+    }
+    
+    
+    public boolean isDirected(){
+        //the graph is considered undircted if for every edge {u,v} there is an edge {v,u}
+        //directed otherwise
+        //returns true if it is directed
+        //false otherwise
+        boolean unDirected = true;
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            for(int j = 0; j < neighbors[i].size(); j = j + 1){
+                if(neighbors[i].get(j) > i){// to speed up assume that v > u  if uv implies vu for all u,v then true
+                        //u is i
+                        //neighbors[i].get(j) is the edge from u to v
+                    int v = neighbors[i].get(j);
+                        //check if the reverse edge exists
+                    unDirected = unDirected && containsEdge(v,i);
+                    // we know uv is true so vu must be true for undirected
+                    // this means that uv and vu is always true
+                }
+                
+            }
+        }
+        
+        return !unDirected;
+    }
+    
+    private boolean containsEdge(int start, int end){
+        //will see if there is an edge from start to end;
+        for(int i = 0; i <  neighbors[start].size(); i = i + 1){
+            if(neighbors[start].get(i) == end){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public boolean isCyclicDirected(){
+        boolean[] seenBefore = new boolean[vertices.length];
+        
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if(! seenBefore[i]){
+                java.util.Queue<Integer> vertexList = new java.util.LinkedList<>();
+                vertexList.offer(i);
+                
+                while( ! vertexList.isEmpty()){
+                    int tempV = vertexList.poll();
+                    seenBefore[tempV] = true;
+                    for(int j = 0; j < neighbors[tempV].size(); j = j + 1){
+                        if( seenBefore[ neighbors[tempV].get(j) ]){
+                            return true;
+                        }else{
+                            vertexList.offer( neighbors[tempV].get(j) );
+                            
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    
+    
+    public boolean isCyclicUndirected(){
+        //here we ignore all the edges that decrease in value
+        //that is we assume for every edge uv then v >= u
+        //modeling a downward flow
+        
+        int[] parent = new int[vertices.length];// keep track of the sources
+                                                // the minimal values in the flow
+        for(int i = 0; i < parent.length; i = i + 1){
+            parent[i] = -1;
+        }
+        
+        boolean[] seenBefore = new boolean[parent.length];
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( !seenBefore[i]){
+                java.util.LinkedList<Integer> vertexQueue = new java.util.LinkedList<>();
+                vertexQueue.offer(i);
+                
+                while( !vertexQueue.isEmpty()){
+                    int tempV = vertexQueue.poll();
+                    seenBefore[tempV] = true;
+                    
+                    for(int j = 0; j < neighbors[tempV].size(); j = j + 1){
+                        if( seenBefore[ neighbors[tempV].get(j) ] ){
+                            if( neighbors[tempV].get(j) != parent[tempV] ){
+                                return true;
+                            }
+                        }else{
+                            vertexQueue.offer( neighbors[tempV].get(j) );
+                            parent[ neighbors[tempV].get(j) ] = tempV;
+                        }
+                    }
+                    
+                }
+                
+            }
+        }
+        
+        return false;
+    }
+    
+    public boolean isCyclic(){
+        if(isDirected()){
+            return isCyclicDirected();
+        }else{
+            return isCyclicUndirected();
+        }
+        
+    }
+    
+    public java.util.List<Integer> getACycleDirected(){
+        boolean[] seenBefore = new boolean[vertices.length];
+        int[] parent = new int[vertices.length];
+        for(int i = 0 ; i < parent.length; i = i + 1){
+            parent[i] = -1;
+        }
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if(! seenBefore[i]){
+                java.util.Queue<Integer> vertexList = new java.util.LinkedList<>();
+                vertexList.offer(i);
+                
+                while( ! vertexList.isEmpty()){
+                    int tempV = vertexList.poll();
+                    seenBefore[tempV] = true;
+                    
+                    for(int j = 0; j < neighbors[tempV].size(); j = j + 1){
+                        if( seenBefore[ neighbors[tempV].get(j) ]){
+                            //return the cycle that we found
+                            
+                            java.util.ArrayList<Integer> tempToRoot = new java.util.ArrayList<>();
+                            
+                            java.util.ArrayList<Integer> cycle = new java.util.ArrayList<>();
+                                                      
+                            int travNode = tempV;
+                            
+                            while(parent[travNode] != -1){
+                                tempToRoot.add(travNode);
+                                travNode = parent[ travNode ];
+                            }
+                            
+                            tempToRoot.add(travNode);
+                            
+                            java.util.Collections.<Integer>sort(tempToRoot);
+                            
+                            travNode = neighbors[tempV].get(j);
+                            
+                            while( java.util.Collections.<Integer>binarySearch( tempToRoot, travNode ) < 0){
+                                cycle.add(travNode);
+                                travNode = parent[travNode];
+                            }
+                            
+                            cycle.add(travNode);//travNode contains the least common ancestor
+                            
+                            java.util.Collections.reverse(cycle);// now list is ordered from LCA - neighbor[tempV]
+                            
+                            while(tempV != travNode){// loop terminates when tempV = LCA which us guarunteed to happen
+                                cycle.add(tempV);
+                                tempV = parent[tempV];
+                            }
+                            
+                            return cycle;
+                            
+                            
+                        }else{
+                            vertexList.offer( neighbors[tempV].get(j) );
+                            parent[ neighbors[tempV].get(j) ] = tempV;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    public java.util.List<Integer> getACycleUndirected(){
+        int[] parent = new int[vertices.length];// keep track of the sources
+                                                // the minimal values in the flow
+        for(int i = 0; i < parent.length; i = i + 1){
+            parent[i] = -1;
+        }
+        
+        boolean[] seenBefore = new boolean[parent.length];
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( !seenBefore[i]){
+                java.util.LinkedList<Integer> vertexQueue = new java.util.LinkedList<>();
+                vertexQueue.offer(i);
+                
+                while( !vertexQueue.isEmpty()){
+                    int tempV = vertexQueue.poll();
+                    seenBefore[tempV] = true;
+                    
+                    for(int j = 0; j < neighbors[tempV].size(); j = j + 1){
+                        if( seenBefore[ neighbors[tempV].get(j) ] ){
+                            if( neighbors[tempV].get(j) != parent[tempV] ){
+                                java.util.ArrayList<Integer> tempToRoot = new java.util.ArrayList<>();
+                                
+                                
+                                java.util.ArrayList<Integer> cycle = new java.util.ArrayList<>();
+                                
+                                int travNode = tempV;
+                                
+                                while(parent[travNode] != -1){
+                                    tempToRoot.add(travNode);
+                                    travNode = parent[ travNode ];
+                                }
+                            
+                                tempToRoot.add(travNode);
+                                
+                                java.util.Collections.<Integer>sort(tempToRoot);
+                            
+                                travNode = neighbors[tempV].get(j);
+                            
+                                while( java.util.Collections.<Integer>binarySearch( tempToRoot, travNode ) < 0){
+                                    cycle.add(travNode);
+                                    travNode = parent[travNode];
+                                }
+                            
+                                cycle.add(travNode);//travNode contains the least common ancestor
+                                
+                                java.util.Collections.reverse(cycle);// now list is ordered from LCA - neighbor[tempV]
+                            
+                                while(tempV != travNode){// loop terminates when tempV = LCA which us guarunteed to happen
+                                    cycle.add(tempV);
+                                    tempV = parent[tempV];
+                                }
+                            
+                                return cycle;
+                            }
+                        }else{
+                            vertexQueue.offer( neighbors[tempV].get(j) );
+                            parent[ neighbors[tempV].get(j) ] = tempV;
+                        }
+                    }
+                    
+                }
+                
+            }
+        }
+        
+        return null;
+    }
+    
+    public java.util.List<Integer> getACycle(){
+        if(isDirected()){
+            return getACycleDirected();
+        }else{
+            return getACycleUndirected();
+        }
+    }
+    
 }
