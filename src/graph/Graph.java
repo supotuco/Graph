@@ -19,6 +19,11 @@ public interface Graph{
     public int getSize();
     public Object[] getVertices();
     
+    public boolean add(Object vertex);
+    public boolean remove(Object vertex);
+    public boolean add(int u, int v);
+    public boolean remove(int u, int v);
+    
     public int getIndex(Object obj);
     public Object getVertex(int index);
     public java.util.List getNeighbors(int v);

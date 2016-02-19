@@ -18,20 +18,35 @@ public abstract class AbstractGraph implements Graph{
     
     protected Object[] vertices;
     protected java.util.List<Integer>[] neighbors;
+    protected int numberOfVertices;
+    protected final int INITIAL_SIZE = 4;
+    
+    
+    protected AbstractGraph(){
+        int numberOfVertices = 0;
+        vertices = new Object[INITIAL_SIZE];
+        neighbors = new java.util.LinkedList[INITIAL_SIZE];
+        for(int i = 0; i < INITIAL_SIZE; i = i + 1){
+            neighbors[i] = new java.util.LinkedList<Integer>();
+        }
+    }
     
     protected AbstractGraph( int[][] edges, Object[] vertices){
         this.vertices = vertices;
-        createAdjacencyLists(edges, vertices.length);
+        numberOfVertices = vertices.length;
+        createAdjacencyLists(edges, numberOfVertices);
     }
     
-    protected AbstractGraph( List<Edge> edges, List vertices){
+    protected AbstractGraph( List<? extends Edge> edges, List vertices){
         this.vertices = vertices.toArray();
+        numberOfVertices = vertices.size();
         createAdjacencyLists(edges, vertices.size());
         
     }
     
-    protected AbstractGraph( List<Edge> edges, int numberOfVertices){
-        vertices = new Integer[numberOfVertices];
+    protected AbstractGraph( List<? extends Edge> edges, int numberOfVertices){
+        this.numberOfVertices = numberOfVertices;
+        vertices = new Integer[numberOfVertices * 2];
         for(int i = 0; i < numberOfVertices; i = i + 1){
             vertices[i] = new Integer(i);
         }
@@ -48,6 +63,44 @@ public abstract class AbstractGraph implements Graph{
         createAdjacencyLists(edges, numberOfVertices);
     }
     
+    private boolean isSame( java.util.List<Integer> edgeSet1, java.util.List<Integer> edgeSet2){
+        for(int i = 0; i < edgeSet1.size(); i = i + 1){
+            if( ! edgeSet2.contains( edgeSet1.get(i))){
+                return false;
+            }
+        }
+        
+        for(int i = 0; i < edgeSet2.size(); i = i + 1){
+            if( ! edgeSet1.contains( edgeSet2.get(i))){
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public boolean equals(Object obj){
+        if( obj instanceof AbstractGraph ){
+            if( ((AbstractGraph)obj).numberOfVertices != this.numberOfVertices){
+                return false;
+            }
+            
+            for(int i = 0; i < numberOfVertices; i = i + 1){
+                if( !isSame(this.neighbors[i], ((AbstractGraph)obj).neighbors[i]) ){
+                    return false;
+                }
+            }
+            
+            return true;
+            
+        }else{
+            return false;
+        }
+    }
+    
+    
+    
     private void createAdjacencyLists(int[][] edges, int numberOfVertices){
         neighbors = new java.util.LinkedList[numberOfVertices];
         for(int i = 0; i < numberOfVertices; i = i + 1){
@@ -61,7 +114,7 @@ public abstract class AbstractGraph implements Graph{
         }
     }
     
-    private void createAdjacencyLists( List<Edge> edges, int numberOfVertices){
+    private void createAdjacencyLists( List<? extends Edge> edges, int numberOfVertices){
         
         neighbors = new java.util.LinkedList[numberOfVertices];
         
@@ -75,7 +128,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public int getSize(){
-        return vertices.length;
+        return numberOfVertices;
     }
     
     public Object getVertex(int index){
@@ -83,11 +136,20 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public Object[] getVertices(){
+        java.util.ArrayList retV = new java.util.ArrayList();
         
-        return vertices;
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( vertices[i] != null ){
+                retV.add(vertices[i]);
+            }
+        }
+        return retV.toArray();
     }
     
     public int getIndex(Object vertex){
+        if(vertex == null){
+            return -1;
+        }
         for(int i = 0; i < getSize(); i = i + 1){
             if( vertex.equals(vertices[i])){
                 return i;
@@ -97,21 +159,45 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public java.util.List getNeighbors(int v){
-        return neighbors[v];
+        if( vertices[v] != null){
+            return neighbors[v];
+        }
+        return null;
     }
     
     public int getDegree(int v){
+        if(vertices[v] == null){
+            return -1;
+        }
+        
         return neighbors[v].size();
+    }
+    
+    private int getCol(int v){
+        int col = 0;
+        for(int i = 0; i < vertices.length && i < v; i = i + 1){
+            if( vertices[v] != null){
+                col = col + 1;
+            }
+        }
+        
+        return col;
     }
     
     public int[][] getAdjacencyMatrix(){
         int[][] adjacencyMatrix = new int[getSize()][getSize()];
         
+        int row = 0;
         for( int i = 0; i < neighbors.length; i = i + 1){
-            for(int j = 0; j < neighbors[i].size(); j = j + 1){
-                int v = neighbors[i].get(j);
-                adjacencyMatrix[i][v] = 1;
+            if(neighbors[i] != null){
+                
+                for(int j = 0; neighbors[i] != null && j < neighbors[i].size(); j = j + 1){
+                    int v = neighbors[i].get(j);
+                    adjacencyMatrix[row][getCol(v)] = 1;
+                }
+                row = row + 1;
             }
+            
         }
         
         return adjacencyMatrix;
@@ -149,12 +235,12 @@ public abstract class AbstractGraph implements Graph{
     
     public Tree dfs(int v){
         List<Integer> searchOrders = new java.util.ArrayList<Integer>();
-        int[] parent = new int[vertices.length];
+        int[] parent = new int[numberOfVertices];
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
         }
         
-        boolean[] isVisited = new boolean[vertices.length];
+        boolean[] isVisited = new boolean[numberOfVertices];
         
         dfs( v, parent, searchOrders, isVisited);
         
@@ -176,7 +262,7 @@ public abstract class AbstractGraph implements Graph{
     
     public Tree bfs(int v){
         List<Integer> searchOrders = new java.util.ArrayList<Integer>();
-        int[] parent = new int[vertices.length];
+        int[] parent = new int[numberOfVertices];
         
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -184,7 +270,7 @@ public abstract class AbstractGraph implements Graph{
         
         java.util.LinkedList<Integer> queue = new java.util.LinkedList<Integer>();
         
-        boolean[] isVisited = new boolean[vertices.length];
+        boolean[] isVisited = new boolean[numberOfVertices];
         
         queue.offer(v);
         isVisited[v] = true;
@@ -289,9 +375,9 @@ public abstract class AbstractGraph implements Graph{
     public java.util.List getConnectedComponentObject(){
         java.util.List componentRoot = new java.util.ArrayList();
         
-        boolean[] seenBefore = new boolean[vertices.length];
+        boolean[] seenBefore = new boolean[numberOfVertices];
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             if( !seenBefore[i]){
                 AbstractGraph.Tree tempTree = bfs(i);// create a spanning tree with root i
                 componentRoot.add(getVertex(i));// add it to the list of root elements
@@ -310,9 +396,9 @@ public abstract class AbstractGraph implements Graph{
     public java.util.List<Integer> getConnectedComponentInt(){
         java.util.List<Integer> componentRoot = new java.util.ArrayList();
         
-        boolean[] seenBefore = new boolean[vertices.length];
+        boolean[] seenBefore = new boolean[numberOfVertices];
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             if( !seenBefore[i]){
                 AbstractGraph.Tree tempTree = bfs(i);// create a spanning tree with root i
                 componentRoot.add(i);// add it to the list of root elements
@@ -377,7 +463,7 @@ public abstract class AbstractGraph implements Graph{
         //false otherwise
         boolean unDirected = true;
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             for(int j = 0; j < neighbors[i].size(); j = j + 1){
                 if(neighbors[i].get(j) > i){// to speed up assume that v > u  if uv implies vu for all u,v then true
                         //u is i
@@ -406,10 +492,10 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public boolean isCyclicDirected(){
-        boolean[] seenBefore = new boolean[vertices.length];
+        boolean[] seenBefore = new boolean[numberOfVertices];
         
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             if(! seenBefore[i]){
                 java.util.Queue<Integer> vertexList = new java.util.LinkedList<>();
                 vertexList.offer(i);
@@ -439,7 +525,7 @@ public abstract class AbstractGraph implements Graph{
         //that is we assume for every edge uv then v >= u
         //modeling a downward flow
         
-        int[] parent = new int[vertices.length];// keep track of the sources
+        int[] parent = new int[numberOfVertices];// keep track of the sources
                                                 // the minimal values in the flow
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -447,7 +533,7 @@ public abstract class AbstractGraph implements Graph{
         
         boolean[] seenBefore = new boolean[parent.length];
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             if( !seenBefore[i]){
                 java.util.LinkedList<Integer> vertexQueue = new java.util.LinkedList<>();
                 vertexQueue.offer(i);
@@ -486,13 +572,13 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public java.util.List<Integer> getACycleDirected(){
-        boolean[] seenBefore = new boolean[vertices.length];
-        int[] parent = new int[vertices.length];
+        boolean[] seenBefore = new boolean[numberOfVertices];
+        int[] parent = new int[numberOfVertices];
         for(int i = 0 ; i < parent.length; i = i + 1){
             parent[i] = -1;
         }
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             if(! seenBefore[i]){
                 java.util.Queue<Integer> vertexList = new java.util.LinkedList<>();
                 vertexList.offer(i);
@@ -554,7 +640,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public java.util.List<Integer> getACycleUndirected(){
-        int[] parent = new int[vertices.length];// keep track of the sources
+        int[] parent = new int[numberOfVertices];// keep track of the sources
                                                 // the minimal values in the flow
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -562,7 +648,7 @@ public abstract class AbstractGraph implements Graph{
         
         boolean[] seenBefore = new boolean[parent.length];
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             if( !seenBefore[i]){
                 java.util.LinkedList<Integer> vertexQueue = new java.util.LinkedList<>();
                 vertexQueue.offer(i);
@@ -632,16 +718,16 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public boolean isBipartite(){
-        int[] color = new int[vertices.length];// we will color the vertices with 0, or 1
+        int[] color = new int[numberOfVertices];// we will color the vertices with 0, or 1
         //if the color tries to change from 1 to 0 return false;
-        int[] parent = new int[vertices.length];
+        int[] parent = new int[numberOfVertices];
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             parent[i] = -1;
             color[i] = -1;
         }
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             if(  color[i] == -1 ){
                 java.util.LinkedList<Integer> bfsQueue = new java.util.LinkedList<>();
                 bfsQueue.offer(i);
@@ -673,16 +759,16 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public List< java.util.HashSet <Integer> > getBipartition(){
-        int[] color = new int[vertices.length];// we will color the vertices with 0, or 1
+        int[] color = new int[numberOfVertices];// we will color the vertices with 0, or 1
         //if the color tries to change from 1 to 0 return false;
-        int[] parent = new int[vertices.length];
+        int[] parent = new int[numberOfVertices];
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             parent[i] = -1;
             color[i] = -1;
         }
         
-        for(int i = 0; i < vertices.length; i = i + 1){
+        for(int i = 0; i < numberOfVertices; i = i + 1){
             if(  color[i] == -1 ){
                 java.util.LinkedList<Integer> bfsQueue = new java.util.LinkedList<>();
                 bfsQueue.offer(i);
