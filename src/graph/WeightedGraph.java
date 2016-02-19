@@ -51,8 +51,9 @@ public class WeightedGraph extends AbstractGraph{
     @Override
     public boolean remove(Object vertex){
         for(int i = 0; i < numberOfVertices; i = i + 1){
-            
+           
         }
+        return false;
     }
     
     
@@ -62,12 +63,12 @@ public class WeightedGraph extends AbstractGraph{
     }
     
     public boolean add(int u, int v, int weight){
-        
+        return false;
     }
     
     @Override
     public boolean remove(int u, int v){
-        
+        return false;
     }
     
     public class WeightedEdge extends AbstractGraph.Edge implements Comparable<WeightedEdge>{

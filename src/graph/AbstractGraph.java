@@ -20,10 +20,12 @@ public abstract class AbstractGraph implements Graph{
     protected java.util.List<Integer>[] neighbors;
     protected int numberOfVertices;
     protected final int INITIAL_SIZE = 4;
+    protected int actualSize;
     
     
     protected AbstractGraph(){
-        int numberOfVertices = 0;
+        numberOfVertices = 0;
+        actualSize = 0; 
         vertices = new Object[INITIAL_SIZE];
         neighbors = new java.util.LinkedList[INITIAL_SIZE];
         for(int i = 0; i < INITIAL_SIZE; i = i + 1){
@@ -34,18 +36,21 @@ public abstract class AbstractGraph implements Graph{
     protected AbstractGraph( int[][] edges, Object[] vertices){
         this.vertices = vertices;
         numberOfVertices = vertices.length;
+        actualSize = vertices.length;
         createAdjacencyLists(edges, numberOfVertices);
     }
     
     protected AbstractGraph( List<? extends Edge> edges, List vertices){
         this.vertices = vertices.toArray();
         numberOfVertices = vertices.size();
+        actualSize = vertices.size();
         createAdjacencyLists(edges, vertices.size());
         
     }
     
     protected AbstractGraph( List<? extends Edge> edges, int numberOfVertices){
         this.numberOfVertices = numberOfVertices;
+        actualSize = numberOfVertices;
         vertices = new Integer[numberOfVertices * 2];
         for(int i = 0; i < numberOfVertices; i = i + 1){
             vertices[i] = new Integer(i);
@@ -56,6 +61,7 @@ public abstract class AbstractGraph implements Graph{
     
     protected AbstractGraph(int[][] edges, int numberOfVertices){
         vertices = new Integer[numberOfVertices];
+        actualSize = numberOfVertices;
         for(int i = 0; i < numberOfVertices; i = i + 1){
             vertices[i] = new Integer(i);
         }
@@ -64,6 +70,13 @@ public abstract class AbstractGraph implements Graph{
     }
     
     private boolean isSame( java.util.List<Integer> edgeSet1, java.util.List<Integer> edgeSet2){
+        if(edgeSet1 == null && edgeSet2 != null){
+            return false;
+        }
+        if(edgeSet1 != null && edgeSet2 == null){
+            return false;
+        }
+        
         for(int i = 0; i < edgeSet1.size(); i = i + 1){
             if( ! edgeSet2.contains( edgeSet1.get(i))){
                 return false;
@@ -81,6 +94,9 @@ public abstract class AbstractGraph implements Graph{
     
     @Override
     public boolean equals(Object obj){
+        //Does not check graph isomorphism
+        //that is if vertices are switched returns false
+        //if vertices are the same and the neighbors are the same then returns true
         if( obj instanceof AbstractGraph ){
             if( ((AbstractGraph)obj).numberOfVertices != this.numberOfVertices){
                 return false;
@@ -136,14 +152,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public Object[] getVertices(){
-        java.util.ArrayList retV = new java.util.ArrayList();
-        
-        for(int i = 0; i < vertices.length; i = i + 1){
-            if( vertices[i] != null ){
-                retV.add(vertices[i]);
-            }
-        }
-        return retV.toArray();
+        return vertices;
     }
     
     public int getIndex(Object vertex){
@@ -159,43 +168,38 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public java.util.List getNeighbors(int v){
-        if( vertices[v] != null){
-            return neighbors[v];
+        if( vertices[v] == null){
+            return null;
         }
-        return null;
+        return neighbors[v];
     }
     
     public int getDegree(int v){
-        if(vertices[v] == null){
+        
+        if( vertices[v] == null){
             return -1;
         }
         
-        return neighbors[v].size();
-    }
-    
-    private int getCol(int v){
-        int col = 0;
-        for(int i = 0; i < vertices.length && i < v; i = i + 1){
-            if( vertices[v] != null){
-                col = col + 1;
-            }
+        java.util.HashSet<Integer> eSet = new java.util.HashSet<>();
+        
+        for( Integer element: neighbors[v]){
+            eSet.add(element);
         }
         
-        return col;
+        return eSet.size();
     }
     
     public int[][] getAdjacencyMatrix(){
-        int[][] adjacencyMatrix = new int[getSize()][getSize()];
+        int[][] adjacencyMatrix = new int[actualSize][actualSize];
         
-        int row = 0;
         for( int i = 0; i < neighbors.length; i = i + 1){
-            if(neighbors[i] != null){
-                
-                for(int j = 0; neighbors[i] != null && j < neighbors[i].size(); j = j + 1){
+            if(vertices[i] != null){
+                for(int j = 0; j < neighbors[i].size(); j = j + 1){
                     int v = neighbors[i].get(j);
-                    adjacencyMatrix[row][getCol(v)] = 1;
+                    adjacencyMatrix[i][v] = 1;
                 }
-                row = row + 1;
+            }else{
+                adjacencyMatrix[i][i] = -1;
             }
             
         }
@@ -215,11 +219,13 @@ public abstract class AbstractGraph implements Graph{
     
     public void printEdges(){
         for(int u = 0; u < neighbors.length; u = u + 1){
-            System.out.print("Vertex " + u + ":");
-            for(int j = 0; j < neighbors[u].size(); j = j + 1){
-                System.out.print("(" + u +  ", "  + neighbors[u].get(j) + ")" );
+            if(vertices[u] != null){
+                System.out.print("Vertex " + u + ":");
+                for(int j = 0; j < neighbors[u].size(); j = j + 1){
+                    System.out.print("(" + u +  ", "  + neighbors[u].get(j) + ")" );
                 
-            }System.out.println();
+                }System.out.println();
+            }
         }
     }
     
@@ -234,6 +240,8 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public Tree dfs(int v){
+        //Assume that v is a valid index;
+        
         List<Integer> searchOrders = new java.util.ArrayList<Integer>();
         int[] parent = new int[numberOfVertices];
         for(int i = 0; i < parent.length; i = i + 1){
@@ -249,6 +257,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     private void dfs(int v, int[] parent, List<Integer> searchOrders, boolean[] isVisited){
+        
         searchOrders.add(v);
         isVisited[v] = true;
         
@@ -375,9 +384,13 @@ public abstract class AbstractGraph implements Graph{
     public java.util.List getConnectedComponentObject(){
         java.util.List componentRoot = new java.util.ArrayList();
         
-        boolean[] seenBefore = new boolean[numberOfVertices];
+        boolean[] seenBefore = new boolean[actualSize];
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < seenBefore.length; i = i + 1){
+            if( vertices[i] == null){
+                seenBefore[i] = true;
+            }
+            
             if( !seenBefore[i]){
                 AbstractGraph.Tree tempTree = bfs(i);// create a spanning tree with root i
                 componentRoot.add(getVertex(i));// add it to the list of root elements
@@ -396,9 +409,12 @@ public abstract class AbstractGraph implements Graph{
     public java.util.List<Integer> getConnectedComponentInt(){
         java.util.List<Integer> componentRoot = new java.util.ArrayList();
         
-        boolean[] seenBefore = new boolean[numberOfVertices];
+        boolean[] seenBefore = new boolean[actualSize];
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < seenBefore.length; i = i + 1){
+            if( vertices[i] == null){
+                seenBefore[i] = true;
+            }
             if( !seenBefore[i]){
                 AbstractGraph.Tree tempTree = bfs(i);// create a spanning tree with root i
                 componentRoot.add(i);// add it to the list of root elements
@@ -464,17 +480,19 @@ public abstract class AbstractGraph implements Graph{
         boolean unDirected = true;
         
         for(int i = 0; i < numberOfVertices; i = i + 1){
-            for(int j = 0; j < neighbors[i].size(); j = j + 1){
-                if(neighbors[i].get(j) > i){// to speed up assume that v > u  if uv implies vu for all u,v then true
+            if( vertices[i] != null){
+                for(int j = 0; j < neighbors[i].size(); j = j + 1){
+                    if(neighbors[i].get(j) > i){// to speed up assume that v > u  if uv implies vu for all u,v then true
                         //u is i
                         //neighbors[i].get(j) is the edge from u to v
-                    int v = neighbors[i].get(j);
+                        int v = neighbors[i].get(j);
                         //check if the reverse edge exists
-                    unDirected = unDirected && containsEdge(v,i);
-                    // we know uv is true so vu must be true for undirected
-                    // this means that uv and vu is always true
-                }
+                        unDirected = unDirected && containsEdge(v,i);
+                        // we know uv is true so vu must be true for undirected
+                        // this means that uv and vu is always true
+                    }
                 
+                }
             }
         }
         
@@ -492,10 +510,13 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public boolean isCyclicDirected(){
-        boolean[] seenBefore = new boolean[numberOfVertices];
+        boolean[] seenBefore = new boolean[actualSize];
         
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < seenBefore.length; i = i + 1){
+            if(vertices[i] == null){
+                seenBefore[i] = true;
+            }
             if(! seenBefore[i]){
                 java.util.Queue<Integer> vertexList = new java.util.LinkedList<>();
                 vertexList.offer(i);
@@ -525,7 +546,7 @@ public abstract class AbstractGraph implements Graph{
         //that is we assume for every edge uv then v >= u
         //modeling a downward flow
         
-        int[] parent = new int[numberOfVertices];// keep track of the sources
+        int[] parent = new int[actualSize];// keep track of the sources
                                                 // the minimal values in the flow
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -533,7 +554,10 @@ public abstract class AbstractGraph implements Graph{
         
         boolean[] seenBefore = new boolean[parent.length];
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < actualSize; i = i + 1){
+            if( vertices[i] == null){
+                seenBefore[i] = true;
+            }
             if( !seenBefore[i]){
                 java.util.LinkedList<Integer> vertexQueue = new java.util.LinkedList<>();
                 vertexQueue.offer(i);
@@ -572,13 +596,16 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public java.util.List<Integer> getACycleDirected(){
-        boolean[] seenBefore = new boolean[numberOfVertices];
-        int[] parent = new int[numberOfVertices];
+        boolean[] seenBefore = new boolean[actualSize];
+        int[] parent = new int[actualSize];
         for(int i = 0 ; i < parent.length; i = i + 1){
             parent[i] = -1;
         }
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < seenBefore.length; i = i + 1){
+            if( vertices[i] == null){
+                seenBefore[i] = true;
+            }
             if(! seenBefore[i]){
                 java.util.Queue<Integer> vertexList = new java.util.LinkedList<>();
                 vertexList.offer(i);
@@ -640,7 +667,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public java.util.List<Integer> getACycleUndirected(){
-        int[] parent = new int[numberOfVertices];// keep track of the sources
+        int[] parent = new int[actualSize];// keep track of the sources
                                                 // the minimal values in the flow
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -648,7 +675,10 @@ public abstract class AbstractGraph implements Graph{
         
         boolean[] seenBefore = new boolean[parent.length];
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < seenBefore.length; i = i + 1){
+            if( vertices[i] == null){
+                seenBefore[i] = true;
+            }
             if( !seenBefore[i]){
                 java.util.LinkedList<Integer> vertexQueue = new java.util.LinkedList<>();
                 vertexQueue.offer(i);
@@ -718,16 +748,19 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public boolean isBipartite(){
-        int[] color = new int[numberOfVertices];// we will color the vertices with 0, or 1
+        int[] color = new int[actualSize];// we will color the vertices with 0, or 1
         //if the color tries to change from 1 to 0 return false;
-        int[] parent = new int[numberOfVertices];
+        int[] parent = new int[actualSize];
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < color.length; i = i + 1){
             parent[i] = -1;
             color[i] = -1;
         }
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < color.length; i = i + 1){
+            if( vertices[i] == null){
+                color[i] = -2;
+            }
             if(  color[i] == -1 ){
                 java.util.LinkedList<Integer> bfsQueue = new java.util.LinkedList<>();
                 bfsQueue.offer(i);
@@ -749,9 +782,7 @@ public abstract class AbstractGraph implements Graph{
                         }
                     }
                     
-                }
-                
-                
+                } 
             }
         }
         
@@ -759,16 +790,20 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public List< java.util.HashSet <Integer> > getBipartition(){
-        int[] color = new int[numberOfVertices];// we will color the vertices with 0, or 1
+        int[] color = new int[actualSize];// we will color the vertices with 0, or 1
         //if the color tries to change from 1 to 0 return false;
-        int[] parent = new int[numberOfVertices];
+        int[] parent = new int[actualSize];
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < color.length; i = i + 1){
             parent[i] = -1;
             color[i] = -1;
         }
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
+        for(int i = 0; i < color.length; i = i + 1){
+            if(vertices[i] == null){
+                color[i] = -2;
+            }
+            
             if(  color[i] == -1 ){
                 java.util.LinkedList<Integer> bfsQueue = new java.util.LinkedList<>();
                 bfsQueue.offer(i);
@@ -805,7 +840,9 @@ public abstract class AbstractGraph implements Graph{
             if(color[i] == 0){
                 zeroColor.add(i);
             }else{
-                oneColor.add(i);
+                if(color[i] == 1){
+                    oneColor.add(i);
+                }
             }
         }
         
@@ -813,6 +850,78 @@ public abstract class AbstractGraph implements Graph{
         retV.add(oneColor);
         
         return retV;
+    }
+    
+    
+    public java.util.List<Integer> getHamiltonianCycle(){
+        int cVert = -1;
+        boolean[] visited = new boolean[actualSize];
+        for(int i = 0; i < actualSize; i = i + 1){
+            if( vertices[i] != null ){
+                cVert = i;
+            }else{
+                visited[i] = true;
+            }
+        }
+        if( cVert == -1 ){
+            return null;
+        }
+        
+        java.util.LinkedList<Integer> path = new java.util.LinkedList();
+        //prevEdgeIndex will contain an edge index from the previous vertex with path index = i to path index = i + 1
+        //cince there is no inital edge to the first vertex and empty vertex list 
+        java.util.LinkedList<Integer> prevEdgeIndex = new java.util.LinkedList();
+        
+        path.add(cVert);
+        visited[cVert] = true;
+        
+        
+        while( path.size() < numberOfVertices && path.size() > 0){
+            int lastV = path.getLast();
+            if( prevEdgeIndex.size() < path.size() ){//find the next edge
+                boolean pathAdded = false;
+                for(int i = 0; !pathAdded && i < neighbors[lastV].size(); i = i + 1){
+                    if( ! visited[ neighbors[lastV].get(i) ] ){
+                        pathAdded = true;
+                        path.add(neighbors[lastV].get(i));
+                        prevEdgeIndex.add(i);
+                        visited[ neighbors[lastV].get(i) ] = true;
+                    }
+                }
+                if( !pathAdded ){//if we can not go anywhere then remove the current index and backtrack
+                    
+                    visited[path.removeLast()] = false;
+                }
+            }else{//a backtrack
+                
+                boolean pathAdded = false;
+                
+                for(int i = prevEdgeIndex.getLast() + 1; !pathAdded && i < neighbors[lastV].size(); i = i + 1){
+                    if( ! visited[ neighbors[lastV] .get(i) ] ){
+                        pathAdded = true;
+                        path.add(neighbors[lastV].get(i));
+                        prevEdgeIndex.removeLast();
+                        prevEdgeIndex.add(i);
+                        visited[ neighbors[lastV].get(i) ] = true;
+                    }
+                }
+                
+                
+                if( !pathAdded ){//if we can not go anywhere then remove the current index and backtrack
+                    
+                    visited[path.removeLast()] = false;//did not visit this vertex
+                    prevEdgeIndex.removeLast();
+                }
+            }
+            
+        }
+        
+        
+        
+        if( path.size() < numberOfVertices || ! containsEdge(path.getLast(), path.getFirst())){
+            return null;
+        }
+        return path;
     }
     
 }

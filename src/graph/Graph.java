@@ -31,7 +31,8 @@ public interface Graph{
     public int[][] getAdjacencyMatrix();
     public void printAdjacencyMatrix();
     public void printEdges();
-    public AbstractGraph.Tree dfs(int v);
-    public AbstractGraph.Tree bfs(int v);
+    public AbstractGraph.Tree dfs(int v);//dfs assmes that v does not have null neighbors
+    public AbstractGraph.Tree bfs(int v);//bfs assumes that v does not have null neighbors
+    public java.util.List<Integer> getHamiltonianCycle();
     
 }
