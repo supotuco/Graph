@@ -74,7 +74,7 @@ public class WeightedGraph extends AbstractGraph{
     public class WeightedEdge extends AbstractGraph.Edge implements Comparable<WeightedEdge>{
         public int weight;
         
-        public WeightedEdge(int u, int v, int weigth){
+        public WeightedEdge(int u, int v, int weight){
             super(u, v);
             this.weight = weight;
         }
@@ -92,7 +92,6 @@ public class WeightedGraph extends AbstractGraph{
         }
     }
     
-    
     public WeightedGraph(int[][] edges, Object[] vertices){
         super(edges, vertices);
         createQueues(edges, numberOfVertices);
@@ -103,6 +102,7 @@ public class WeightedGraph extends AbstractGraph{
         createQueues(edges, numberOfVertices);
         
     }
+    
     public WeightedGraph(List<WeightedEdge> edges, List vertices){
         super((List)edges, vertices);
         createQueues(edges, vertices.size());
