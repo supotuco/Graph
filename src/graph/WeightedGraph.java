@@ -70,7 +70,7 @@ public class WeightedGraph extends AbstractGraph{
     }
     
     public boolean add(int u, int v, int weight){
-        
+        return false;
     }
     
     @Override
