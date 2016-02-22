@@ -50,8 +50,15 @@ public class WeightedGraph extends AbstractGraph{
     
     @Override
     public boolean remove(Object vertex){
+        if(vertex == null){
+            return false;
+        }
+        
         for(int i = 0; i < numberOfVertices; i = i + 1){
-           
+           if( vertex.equals( vertices[i] ) ){
+               vertices[i] = null;
+               queues[i] = null;
+           }
         }
         return false;
     }
@@ -63,7 +70,7 @@ public class WeightedGraph extends AbstractGraph{
     }
     
     public boolean add(int u, int v, int weight){
-        return false;
+        
     }
     
     @Override
