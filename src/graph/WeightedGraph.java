@@ -156,6 +156,10 @@ public class WeightedGraph extends AbstractGraph{
     
     public MST getMinimumSpanningTree(int startingVertex){
         Set<Integer> T = new HashSet<>();
+        //need to guaruntee there is a spanning tree
+        AbstractGraph.Tree bfs = super.bfs( startingVertex );
+        
+        java.util.List searchOrders = bfs.getSearchOrders();
         
         T.add(startingVertex);
         
@@ -169,13 +173,13 @@ public class WeightedGraph extends AbstractGraph{
         
         PriorityQueue<WeightedEdge>[] queues = deepClone(this.queues);
         
-        while(T.size() < numberOfVertices){
+        while(T.size() < searchOrders.size()){
             int v = -1;
-            
+            int par = -1;
             int smallestWeight = Integer.MAX_VALUE;
             
             for(int u: T){
-                while( !queues[u].isEmpty() && T.contains( queues[u].peek().v )){
+                while( !queues[u].isEmpty() && T.contains( queues[u].peek().v ) ){
                     queues[u].remove();
                 }
                 
@@ -184,13 +188,16 @@ public class WeightedGraph extends AbstractGraph{
                 }
                 
                 WeightedEdge edge = queues[u].peek();
+                
                 if(edge.weight < smallestWeight){
                     v = edge.v;
+                    par = u;
                     smallestWeight = edge.weight;
-                    parent[v] = u;
+                    //parent[v] = u;
                 }
             }
             
+            parent[v] = par;
             T.add(v);
             totalWeight  = totalWeight + smallestWeight;
         }
