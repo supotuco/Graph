@@ -217,7 +217,12 @@ public class WeightedGraph extends AbstractGraph{
     }
     
     public MST getMinimumSpanningTree(){
-        return getMinimumSpanningTree(0);
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( vertices[i] != null){
+                return getMinimumSpanningTree(i);
+            }
+        }
+        return null;
     }
     
     public MST getMinimumSpanningTree(int startingVertex){
@@ -276,10 +281,14 @@ public class WeightedGraph extends AbstractGraph{
         PriorityQueue<WeightedEdge>[] copiedQueues = new PriorityQueue[queues.length];
         
         for(int i = 0; i < queues.length; i = i + 1){
-            copiedQueues[i] = new PriorityQueue<WeightedEdge>();
+            if(queues[i] != null){
+                copiedQueues[i] = new PriorityQueue<WeightedEdge>();
             
-            for(WeightedEdge e: queues[i]){
-                copiedQueues[i].add(e);
+                for(WeightedEdge e: queues[i]){
+                    copiedQueues[i].add(e);
+                }
+            }else{
+                copiedQueues[i] = null;
             }
             
         }
@@ -373,4 +382,85 @@ public class WeightedGraph extends AbstractGraph{
             }
         }   
     }
+    
+    public MST getMinimumSpanningTreeKruskal(){
+        //assumes there is one connected component to get a tree
+        //otherwise returns a forrest
+        PriorityQueue<WeightedEdge> edgeList = new PriorityQueue<>();
+        java.util.Set<Integer> vertexList = new java.util.HashSet();
+        PriorityQueue<WeightedEdge> finalList = new PriorityQueue<>(new java.util.Comparator<WeightedEdge>(){
+            @Override
+            public int compare(WeightedEdge edge1, WeightedEdge edge2){
+                if( edge1.u > edge2.u){
+                    return 1;
+                }else{
+                    if(edge1.u == edge2.u){
+                        if( edge1.v > edge2.v ){
+                            return 1;
+                        }else{
+                            if( edge1.v == edge2.v ){
+                                return 0;
+                            }else{
+                                return - 1;
+                            }
+                        }
+                    }else{
+                        return - 1;
+                    }
+                }
+            }
+        });
+        PriorityQueue<WeightedEdge>[] queues = deepClone(this.queues);
+        int[] parent = new int[vertices.length];
+        int totalWeight = 0;
+        
+        for(int i = 0; i < parent.length; i = i + 1){
+            parent[i] = -1;
+        }
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( vertices[i] != null){
+                while( queues[i].size() > 0){
+                    edgeList.offer( queues[i].poll() );
+                }
+            }
+        }//after this edgeList has all the edges ordered by size from smallest to larges
+        
+        while( edgeList.size() > 0 ){
+            WeightedEdge smallestEdge = edgeList.poll();
+            if( ! vertexList.contains( smallestEdge.v) || ! vertexList.contains(smallestEdge.u ) ){
+                vertexList.add(smallestEdge.v);
+                vertexList.add(smallestEdge.u);
+                totalWeight = totalWeight + smallestEdge.weight;
+                finalList.add(smallestEdge);
+            }
+        }
+        
+        int tempS = 0;
+        int root = vertices.length;
+        while(finalList.size() > 0){
+            WeightedEdge tempEdge = finalList.poll();
+            tempS = tempS + tempEdge.weight;
+            
+            if( tempEdge.u < tempEdge.v){
+                parent[tempEdge.v] = tempEdge.u;
+                
+                if( tempEdge.u < root){
+                    root = tempEdge.u;
+                }
+            }else{
+                parent[tempEdge.u] = tempEdge.v;
+                
+                if( tempEdge.v < root){
+                    root = tempEdge.v;
+                }
+            }
+        }
+        
+        System.out.println(tempS + " " + totalWeight);
+        
+        return new MST(root, parent, totalWeight);
+        
+    }
+    
 }
