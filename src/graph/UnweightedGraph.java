@@ -34,9 +34,20 @@ public class UnweightedGraph extends AbstractGraph{
     @Override
     public boolean add(Object vertex){
         try{
+            for(int i = 0; i < numberOfVertices; i = i + 1){
+                if( vertex.equals( vertices[i] ) ){
+                    return false;
+                }
+            }
             if( numberOfVertices < vertices.length){
-                vertices[numberOfVertices] = vertex;
-                numberOfVertices = numberOfVertices + 1;
+                for(int i = 0; i < vertices.length; i = i + 1){
+                    if( vertices[i] == null){
+                        vertices[i] = vertex;
+                        neighbors[i] = new java.util.LinkedList<Integer>();
+                        numberOfVertices = numberOfVertices + 1;
+                        return true;
+                    }
+                }
             }else{
                 Object[] tempVert = new Object[ 2 * vertices.length];
                 java.util.List<Integer>[] tempNeigh = new java.util.LinkedList[ 2 * vertices.length];
@@ -54,7 +65,6 @@ public class UnweightedGraph extends AbstractGraph{
                 
             }
             
-            actualSize = actualSize + 1;
             return true;
         }catch(Exception ex){
             return false;
@@ -64,27 +74,30 @@ public class UnweightedGraph extends AbstractGraph{
     
     @Override
     public boolean remove(Object vertex){
-        boolean retV = false;
+        
         for(int i = 0; i < numberOfVertices; i = i + 1){
-            if( vertices[i].equals(vertex) ){
+            if( vertices[i] != null && vertices[i].equals(vertex) ){
                 vertices[i] = null;// remove the vertex
                 neighbors[i] = null;// remove the neighbors associated to the vertex
-                retV = true;
                 
                 Integer removeObj = new Integer(i);
                 
                 for(int j = 0; j < i; j = j + 1){
-                    while( neighbors[j].remove((Integer)(removeObj)) );
+                    if(neighbors[j] != null){
+                        while( neighbors[j].remove((Integer)(removeObj)) );
+                    }
                 }
                 
                 for(int j = i + 1; j < numberOfVertices; j = j + 1){
-                    while( neighbors[j].remove((Integer)(removeObj)) );
+                    if(neighbors[j] != null){
+                        while( neighbors[j].remove((Integer)(removeObj)) );
+                    }
                 }
-                break;
+                return true;
             }
         }
         
-        return retV;
+        return false;
     }
     
     

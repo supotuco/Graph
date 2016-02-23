@@ -20,12 +20,11 @@ public abstract class AbstractGraph implements Graph{
     protected java.util.List<Integer>[] neighbors;
     protected int numberOfVertices;
     protected final int INITIAL_SIZE = 4;
-    protected int actualSize;
     
     
     protected AbstractGraph(){
         numberOfVertices = 0;
-        actualSize = 0; 
+        
         vertices = new Object[INITIAL_SIZE];
         neighbors = new java.util.LinkedList[INITIAL_SIZE];
         for(int i = 0; i < INITIAL_SIZE; i = i + 1){
@@ -36,21 +35,21 @@ public abstract class AbstractGraph implements Graph{
     protected AbstractGraph( int[][] edges, Object[] vertices){
         this.vertices = vertices;
         numberOfVertices = vertices.length;
-        actualSize = vertices.length;
+        
         createAdjacencyLists(edges, numberOfVertices);
     }
     
     protected AbstractGraph( List<? extends Edge> edges, List vertices){
         this.vertices = vertices.toArray();
         numberOfVertices = vertices.size();
-        actualSize = vertices.size();
+        
         createAdjacencyLists(edges, vertices.size());
         
     }
     
     protected AbstractGraph( List<? extends Edge> edges, int numberOfVertices){
         this.numberOfVertices = numberOfVertices;
-        actualSize = numberOfVertices;
+        
         vertices = new Integer[numberOfVertices * 2];
         for(int i = 0; i < numberOfVertices; i = i + 1){
             vertices[i] = new Integer(i);
@@ -61,13 +60,14 @@ public abstract class AbstractGraph implements Graph{
     
     protected AbstractGraph(int[][] edges, int numberOfVertices){
         vertices = new Integer[numberOfVertices];
-        actualSize = numberOfVertices;
+        
         for(int i = 0; i < numberOfVertices; i = i + 1){
             vertices[i] = new Integer(i);
         }
         
         createAdjacencyLists(edges, numberOfVertices);
     }
+    
     
     private boolean isSame( java.util.List<Integer> edgeSet1, java.util.List<Integer> edgeSet2){
         if(edgeSet1 == null && edgeSet2 != null){
@@ -152,6 +152,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public Object[] getVertices(){
+        
         return vertices;
     }
     
@@ -190,16 +191,33 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public int[][] getAdjacencyMatrix(){
-        int[][] adjacencyMatrix = new int[actualSize][actualSize];
+        int[][] adjacencyMatrix = new int[numberOfVertices][numberOfVertices];
         
-        for( int i = 0; i < neighbors.length; i = i + 1){
+        int[] row = new int[vertices.length];
+        int[] col = new int[vertices.length];
+        
+        int rcVal = 0;
+        
+        
+        for(int i = 0; i < col.length; i = i + 1){
+            if(vertices[i] != null){
+                row[i] = rcVal;
+                col[i] = rcVal;
+                rcVal = rcVal + 1;
+            }else{
+                row[i] = -1;
+                col[i] = -1;
+            }
+        }
+        
+        
+        for( int i = 0; i < vertices.length; i = i + 1){
+            
             if(vertices[i] != null){
                 for(int j = 0; j < neighbors[i].size(); j = j + 1){
                     int v = neighbors[i].get(j);
-                    adjacencyMatrix[i][v] = 1;
+                    adjacencyMatrix[ row[i] ][ col[v] ] = 1;
                 }
-            }else{
-                adjacencyMatrix[i][i] = -1;
             }
             
         }
@@ -243,12 +261,12 @@ public abstract class AbstractGraph implements Graph{
         //Assume that v is a valid index;
         
         List<Integer> searchOrders = new java.util.ArrayList<Integer>();
-        int[] parent = new int[numberOfVertices];
+        int[] parent = new int[vertices.length];
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
         }
         
-        boolean[] isVisited = new boolean[numberOfVertices];
+        boolean[] isVisited = new boolean[vertices.length];
         
         dfs( v, parent, searchOrders, isVisited);
         
@@ -271,7 +289,7 @@ public abstract class AbstractGraph implements Graph{
     
     public Tree bfs(int v){
         List<Integer> searchOrders = new java.util.ArrayList<Integer>();
-        int[] parent = new int[numberOfVertices];
+        int[] parent = new int[vertices.length];
         
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -279,7 +297,7 @@ public abstract class AbstractGraph implements Graph{
         
         java.util.LinkedList<Integer> queue = new java.util.LinkedList<Integer>();
         
-        boolean[] isVisited = new boolean[numberOfVertices];
+        boolean[] isVisited = new boolean[vertices.length];
         
         queue.offer(v);
         isVisited[v] = true;
@@ -384,7 +402,7 @@ public abstract class AbstractGraph implements Graph{
     public java.util.List getConnectedComponentObject(){
         java.util.List componentRoot = new java.util.ArrayList();
         
-        boolean[] seenBefore = new boolean[actualSize];
+        boolean[] seenBefore = new boolean[vertices.length];
         
         for(int i = 0; i < seenBefore.length; i = i + 1){
             if( vertices[i] == null){
@@ -409,7 +427,7 @@ public abstract class AbstractGraph implements Graph{
     public java.util.List<Integer> getConnectedComponentInt(){
         java.util.List<Integer> componentRoot = new java.util.ArrayList();
         
-        boolean[] seenBefore = new boolean[actualSize];
+        boolean[] seenBefore = new boolean[vertices.length];
         
         for(int i = 0; i < seenBefore.length; i = i + 1){
             if( vertices[i] == null){
@@ -510,7 +528,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public boolean isCyclicDirected(){
-        boolean[] seenBefore = new boolean[actualSize];
+        boolean[] seenBefore = new boolean[vertices.length];
         
         
         for(int i = 0; i < seenBefore.length; i = i + 1){
@@ -546,7 +564,7 @@ public abstract class AbstractGraph implements Graph{
         //that is we assume for every edge uv then v >= u
         //modeling a downward flow
         
-        int[] parent = new int[actualSize];// keep track of the sources
+        int[] parent = new int[vertices.length];// keep track of the sources
                                                 // the minimal values in the flow
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -554,7 +572,7 @@ public abstract class AbstractGraph implements Graph{
         
         boolean[] seenBefore = new boolean[parent.length];
         
-        for(int i = 0; i < actualSize; i = i + 1){
+        for(int i = 0; i < vertices.length; i = i + 1){
             if( vertices[i] == null){
                 seenBefore[i] = true;
             }
@@ -596,8 +614,8 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public java.util.List<Integer> getACycleDirected(){
-        boolean[] seenBefore = new boolean[actualSize];
-        int[] parent = new int[actualSize];
+        boolean[] seenBefore = new boolean[vertices.length];
+        int[] parent = new int[vertices.length];
         for(int i = 0 ; i < parent.length; i = i + 1){
             parent[i] = -1;
         }
@@ -667,7 +685,7 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public java.util.List<Integer> getACycleUndirected(){
-        int[] parent = new int[actualSize];// keep track of the sources
+        int[] parent = new int[vertices.length];// keep track of the sources
                                                 // the minimal values in the flow
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
@@ -748,9 +766,9 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public boolean isBipartite(){
-        int[] color = new int[actualSize];// we will color the vertices with 0, or 1
+        int[] color = new int[vertices.length];// we will color the vertices with 0, or 1
         //if the color tries to change from 1 to 0 return false;
-        int[] parent = new int[actualSize];
+        int[] parent = new int[vertices.length];
         
         for(int i = 0; i < color.length; i = i + 1){
             parent[i] = -1;
@@ -790,9 +808,9 @@ public abstract class AbstractGraph implements Graph{
     }
     
     public List< java.util.HashSet <Integer> > getBipartition(){
-        int[] color = new int[actualSize];// we will color the vertices with 0, or 1
+        int[] color = new int[vertices.length];// we will color the vertices with 0, or 1
         //if the color tries to change from 1 to 0 return false;
-        int[] parent = new int[actualSize];
+        int[] parent = new int[vertices.length];
         
         for(int i = 0; i < color.length; i = i + 1){
             parent[i] = -1;
@@ -855,8 +873,8 @@ public abstract class AbstractGraph implements Graph{
     
     public java.util.List<Integer> getHamiltonianCycle(){
         int cVert = -1;
-        boolean[] visited = new boolean[actualSize];
-        for(int i = 0; i < actualSize; i = i + 1){
+        boolean[] visited = new boolean[vertices.length];
+        for(int i = 0; i < vertices.length; i = i + 1){
             if( vertices[i] != null ){
                 cVert = i;
             }else{

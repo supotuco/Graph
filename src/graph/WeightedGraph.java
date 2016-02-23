@@ -21,10 +21,20 @@ public class WeightedGraph extends AbstractGraph{
     @Override
     public boolean add(Object vertex){
         try{
+            for(int i = 0; i < numberOfVertices; i = i + 1){
+                if(vertex.equals(vertices[i])){
+                    return false;
+                }
+            }
             if( numberOfVertices < vertices.length){
-                vertices[numberOfVertices] = vertex;
-                queues[numberOfVertices] = new PriorityQueue<WeightedEdge>();
-                numberOfVertices = numberOfVertices + 1;
+                for(int i = 0; i < vertices.length; i = i + 1){
+                    if(vertices[i] == null){
+                        vertices[i] = vertex;
+                        queues[i] = new PriorityQueue<WeightedEdge>();
+                        numberOfVertices = numberOfVertices + 1;
+                        return true;
+                    }
+                }
                 
             }else{
                 Object[] tempV = new Object[ vertices.length * 2];
@@ -54,10 +64,23 @@ public class WeightedGraph extends AbstractGraph{
             return false;
         }
         
-        for(int i = 0; i < numberOfVertices; i = i + 1){
-           if( vertex.equals( vertices[i] ) ){
-               vertices[i] = null;
-               queues[i] = null;
+        for(int i = 0; i < vertices.length; i = i + 1){
+           if( vertices[i] != null && vertex.equals( vertices[i] ) ){
+               vertices[i] = null;//remove vertex i
+               queues[i] = null;//remove neighbors
+               
+               for(int j = 0; j < i; j = j + 1){
+                   if( vertices[j] != null){
+                       removeAll(j,i);//remove all edges from j to i
+                   }
+               }
+               
+               for(int j = i + 1; j < vertices.length; j = j + 1){
+                   if( vertices[j] != null){
+                       removeAll(j,i);//remove all edges from j to i
+                   }
+               }
+               
            }
         }
         return false;
@@ -70,12 +93,48 @@ public class WeightedGraph extends AbstractGraph{
     }
     
     public boolean add(int u, int v, int weight){
-        return false;
+        WeightedEdge newEdge = new WeightedEdge(u,v, weight);
+        
+        if( queues[u].contains(newEdge) ){
+            return false;
+        }else{
+            return queues[u].offer(newEdge);
+        }
+        
     }
     
     @Override
     public boolean remove(int u, int v){
-        return false;
+        return remove(u,v,1);
+    }
+    
+    public boolean remove(int u, int v, int weight){
+        
+        return queues[u].remove( new WeightedEdge(u, v, weight));
+    }
+    
+    public boolean removeAll(int u, int v){
+        //Assume that u is a valid index;
+        //Else will throw an exception
+        try{
+            PriorityQueue<WeightedEdge> newQueue = new PriorityQueue<WeightedEdge>();
+            
+            
+            while( ! queues[u].isEmpty() ){
+                WeightedEdge temp = queues[u].poll();
+                if(  temp.v != v){
+                    newQueue.offer(temp);
+                }
+            }
+            
+            queues[u] = newQueue;
+            
+            
+            return true;
+        }catch(Exception ex){
+            return false;
+        }
+        
     }
     
     public class WeightedEdge extends AbstractGraph.Edge implements Comparable<WeightedEdge>{
