@@ -406,7 +406,7 @@ public class WeightedGraph extends AbstractGraph{
         int totalWeight = 0;
         
         java.util.Map<Integer, Integer> verticesToComponent = new java.util.HashMap<>();//to try to group vertices into components
-        java.util.Map<Integer, Integer> componentToIsland = new java.util.HashMap<>();//contains the final grouping
+        
         
         PriorityQueue<WeightedEdge>[] queues = deepClone(this.queues); 
         for(int i = 0; i < vertices.length; i = i + 1){
@@ -431,13 +431,26 @@ public class WeightedGraph extends AbstractGraph{
             if( vertexList.contains(smallestEdge.u) ){
                 if( vertexList.contains( smallestEdge.v ) ){
                     //check for a cycle
-                    if( !componentToIsland.get( verticesToComponent.get( smallestEdge.u ) ).equals(componentToIsland.get( verticesToComponent.get( smallestEdge.v ) )) ) {
+                    
+                    int root1 = verticesToComponent.get( smallestEdge.u );
+                    int root2 = verticesToComponent.get( smallestEdge.v );
+                    
+                    while( root1 != verticesToComponent.get(root1).intValue()){
+                        root1 = verticesToComponent.get(root1);
+                    }
+                    
+                    while( root2 != verticesToComponent.get(root2).intValue()){
+                        root2 = verticesToComponent.get(root2);
+                    }
+                    
+                    if( root1 != root2 ) {
                         //not a cycle
-                        root = Math.max(componentToIsland.get( verticesToComponent.get( smallestEdge.u ) ).intValue(), componentToIsland.get( verticesToComponent.get( smallestEdge.v ) ).intValue());
+                        root = Math.max(root1, root2) ;
                         neighbors[smallestEdge.u].add(smallestEdge.v);
                         neighbors[smallestEdge.v].add(smallestEdge.u);
-                        componentToIsland.put( verticesToComponent.get( smallestEdge.u ), root );
-                        componentToIsland.put( verticesToComponent.get( smallestEdge.v ), root );
+                        
+                        verticesToComponent.put( root1, root );
+                        verticesToComponent.put( root2, root );
                         totalWeight = totalWeight + smallestEdge.weight;
                     }//else do nothing cycle detected
                     
@@ -463,10 +476,9 @@ public class WeightedGraph extends AbstractGraph{
                     neighbors[smallestEdge.u].add(smallestEdge.v);
                     neighbors[smallestEdge.v].add(smallestEdge.u);
                     
-                    islandCount = islandCount + 1;
-                    verticesToComponent.put( smallestEdge.u, islandCount );
-                    verticesToComponent.put( smallestEdge.v, islandCount );
-                    componentToIsland.put( islandCount, smallestEdge.u );
+                    verticesToComponent.put( smallestEdge.u, smallestEdge.v);
+                    verticesToComponent.put( smallestEdge.v, smallestEdge.v );
+                    
                     totalWeight = totalWeight + smallestEdge.weight;
                 }
             }
