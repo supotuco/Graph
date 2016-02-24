@@ -206,6 +206,42 @@ public class WeightedGraph extends AbstractGraph{
         }
     }
     
+        public int[][] getAdjacencyMatrix(){
+        int[][] adjacencyMatrix = new int[numberOfVertices][numberOfVertices];
+        
+        int[] indexFunction = new int[vertices.length];
+        int rcVal = 0;
+        
+        
+        for(int i = 0; i < indexFunction.length; i = i + 1){
+            if(vertices[i] != null){
+                indexFunction[i] = rcVal;
+                
+                rcVal = rcVal + 1;
+            }else{
+                indexFunction[i] = -1;
+                
+            }
+        }
+        
+        java.util.PriorityQueue<WeightedEdge>[] queues = deepClone(this.queues);
+        
+        
+        for( int i = 0; i < queues.length; i = i + 1){
+            
+            if(queues[i] != null){
+                while( queues[i].size() > 0 ){
+                    WeightedEdge topEdge = queues[i].poll();
+                    adjacencyMatrix[ indexFunction[ topEdge.u ] ][ indexFunction[ topEdge.v ] ] = topEdge.weight;
+                }
+                
+            }
+            
+        }
+        
+        return adjacencyMatrix;
+    }
+    
     public void printWeightedEdges(){
         for(int i = 0; i < queues.length; i = i + 1){
             System.out.print("Vertex " + i + ": ");
@@ -504,4 +540,103 @@ public class WeightedGraph extends AbstractGraph{
         
     }
     
+    public MST getMinimumSpanningTreeMatrix(){
+        for(int i = 0; i < vertices.length; i = i + 1){
+            if( vertices[i] != null){
+                return getMinimumSpanningTreeMatrix(i);
+            }
+        }
+        return null;
+    }
+    
+    public MST getMinimumSpanningTreeMatrix(int sourceVertex){
+        int[] parent = new int[vertices.length];
+        int totalWeight = 0;
+        
+        int[] indexFunction = new int[vertices.length];
+        
+        int rcVal = 0;
+        
+        java.util.HashSet<Integer> seenBefore = new java.util.HashSet<>();
+        java.util.HashSet<Integer> notSeen = new java.util.HashSet<>();
+        
+        for(int i = 0; i < indexFunction.length; i = i + 1){
+            if(vertices[i] != null){
+                indexFunction[i] = rcVal;
+                rcVal = rcVal + 1;
+                notSeen.add(i);
+            }else{
+                indexFunction[i] = -1;
+            }
+            parent[i] = -1;
+        }
+        
+        int[][] adjMatrix = getAdjacencyMatrix();
+        
+        notSeen.remove(new Integer(sourceVertex));
+        seenBefore.add(new Integer(sourceVertex));
+        
+        while( notSeen.size() > 0 ){
+            java.util.Iterator<Integer> iter = notSeen.iterator();
+            int minVertex = -1;
+            int minParent = -1;
+            int minDistance = -1;
+            while( iter.hasNext() && minParent < 0){//finds first vertex connected o current graph
+                minVertex = iter.next();
+                minParent = closestParent( seenBefore, minVertex, adjMatrix, indexFunction);
+            }
+            
+            if(minParent < 0 ){
+                break;
+            }
+            
+            minDistance = adjMatrix[ indexFunction[minParent] ][ indexFunction[minVertex] ];
+            
+            while( iter.hasNext() ){//finds closest vertex connected to graph
+                int tempVertex = iter.next();
+                int tempParent = closestParent( seenBefore, tempVertex, adjMatrix, indexFunction);
+                
+                if( tempParent < 0 ){
+                    continue;
+                }
+                
+                int tempD = adjMatrix[ indexFunction[ tempParent] ][ indexFunction[ tempVertex ] ];
+                
+                if( tempD < minDistance && tempD > 0){
+                    minVertex = tempVertex;
+                    minDistance = tempD;
+                    minParent = tempParent;
+                }
+            }
+            
+            notSeen.remove(minVertex);
+            seenBefore.add(minVertex);
+            totalWeight = totalWeight + minDistance;
+            parent[minVertex] = minParent;
+        }
+        
+        
+        return new MST(sourceVertex ,parent, totalWeight);
+    }
+    
+    private int closestParent( java.util.Set<Integer> set, int vertex, int[][] adjMatrix, int[] indexFunction){
+        int parent = -1;
+        int minD = Integer.MAX_VALUE;
+        boolean returnValue = false;
+        
+        for(Integer element: set){
+            if( 0 < adjMatrix[ indexFunction[element] ][ indexFunction[vertex] ] &&//must contain an edge
+                    adjMatrix[ indexFunction[element] ][ indexFunction[vertex] ] < minD ){
+                minD = adjMatrix[indexFunction[element]][indexFunction[vertex]];
+                parent = element;
+                returnValue = true;
+            }
+        }
+        
+        if(returnValue){
+            return parent;
+        }else{
+            return -1;
+        }
+    }
 }

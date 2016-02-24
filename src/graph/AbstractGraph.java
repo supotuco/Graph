@@ -193,20 +193,18 @@ public abstract class AbstractGraph implements Graph{
     public int[][] getAdjacencyMatrix(){
         int[][] adjacencyMatrix = new int[numberOfVertices][numberOfVertices];
         
-        int[] row = new int[vertices.length];
-        int[] col = new int[vertices.length];
-        
+        int[] indexFunction = new int[vertices.length];
         int rcVal = 0;
         
         
-        for(int i = 0; i < col.length; i = i + 1){
+        for(int i = 0; i < indexFunction.length; i = i + 1){
             if(vertices[i] != null){
-                row[i] = rcVal;
-                col[i] = rcVal;
+                indexFunction[i] = rcVal;
+                
                 rcVal = rcVal + 1;
             }else{
-                row[i] = -1;
-                col[i] = -1;
+                indexFunction[i] = -1;
+                
             }
         }
         
@@ -216,7 +214,7 @@ public abstract class AbstractGraph implements Graph{
             if(vertices[i] != null){
                 for(int j = 0; j < neighbors[i].size(); j = j + 1){
                     int v = neighbors[i].get(j);
-                    adjacencyMatrix[ row[i] ][ col[v] ] = 1;
+                    adjacencyMatrix[ indexFunction[i] ][ indexFunction[v] ] = 1;
                 }
             }
             
