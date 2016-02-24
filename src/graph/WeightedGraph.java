@@ -388,36 +388,27 @@ public class WeightedGraph extends AbstractGraph{
         //otherwise returns a forrest
         PriorityQueue<WeightedEdge> edgeList = new PriorityQueue<>();
         java.util.Set<Integer> vertexList = new java.util.HashSet();
-        PriorityQueue<WeightedEdge> finalList = new PriorityQueue<>(new java.util.Comparator<WeightedEdge>(){
-            @Override
-            public int compare(WeightedEdge edge1, WeightedEdge edge2){
-                if( edge1.u > edge2.u){
-                    return 1;
-                }else{
-                    if(edge1.u == edge2.u){
-                        if( edge1.v > edge2.v ){
-                            return 1;
-                        }else{
-                            if( edge1.v == edge2.v ){
-                                return 0;
-                            }else{
-                                return - 1;
-                            }
-                        }
-                    }else{
-                        return - 1;
-                    }
-                }
+        
+        java.util.LinkedList<Integer>[] neighbors = new java.util.LinkedList[vertices.length];
+        
+        for(int i = 0; i < neighbors.length; i = i + 1){
+            if(vertices[i] != null){
+                neighbors[i] = new java.util.LinkedList<>();
             }
-        });
-        PriorityQueue<WeightedEdge>[] queues = deepClone(this.queues);
+        }
+        
         int[] parent = new int[vertices.length];
-        int totalWeight = 0;
         
         for(int i = 0; i < parent.length; i = i + 1){
             parent[i] = -1;
         }
         
+        int totalWeight = 0;
+        
+        java.util.Map<Integer, Integer> verticesToComponent = new java.util.HashMap<>();//to try to group vertices into components
+        java.util.Map<Integer, Integer> componentToIsland = new java.util.HashMap<>();//contains the final grouping
+        
+        PriorityQueue<WeightedEdge>[] queues = deepClone(this.queues); 
         for(int i = 0; i < vertices.length; i = i + 1){
             if( vertices[i] != null){
                 while( queues[i].size() > 0){
@@ -426,38 +417,76 @@ public class WeightedGraph extends AbstractGraph{
             }
         }//after this edgeList has all the edges ordered by size from smallest to larges
         
+        int root = -1;
+        
+        int islandCount = 0;
         while( edgeList.size() > 0 ){
             WeightedEdge smallestEdge = edgeList.poll();
-            if( ! vertexList.contains( smallestEdge.v) || ! vertexList.contains(smallestEdge.u ) ){
-                vertexList.add(smallestEdge.v);
-                vertexList.add(smallestEdge.u);
-                totalWeight = totalWeight + smallestEdge.weight;
-                finalList.add(smallestEdge);
-            }
-        }
-        
-        int tempS = 0;
-        int root = vertices.length;
-        while(finalList.size() > 0){
-            WeightedEdge tempEdge = finalList.poll();
-            tempS = tempS + tempEdge.weight;
+            if( smallestEdge.v < smallestEdge.u){
+                int temp = smallestEdge.u;
+                smallestEdge.u = smallestEdge.v;
+                smallestEdge.v = temp;
+            }//make all edges from u to v
             
-            if( tempEdge.u < tempEdge.v){
-                parent[tempEdge.v] = tempEdge.u;
-                
-                if( tempEdge.u < root){
-                    root = tempEdge.u;
+            if( vertexList.contains(smallestEdge.u) ){
+                if( vertexList.contains( smallestEdge.v ) ){
+                    //check for a cycle
+                    if( !componentToIsland.get( verticesToComponent.get( smallestEdge.u ) ).equals(componentToIsland.get( verticesToComponent.get( smallestEdge.v ) )) ) {
+                        //not a cycle
+                        root = Math.max(componentToIsland.get( verticesToComponent.get( smallestEdge.u ) ).intValue(), componentToIsland.get( verticesToComponent.get( smallestEdge.v ) ).intValue());
+                        neighbors[smallestEdge.u].add(smallestEdge.v);
+                        neighbors[smallestEdge.v].add(smallestEdge.u);
+                        componentToIsland.put( verticesToComponent.get( smallestEdge.u ), root );
+                        componentToIsland.put( verticesToComponent.get( smallestEdge.v ), root );
+                        totalWeight = totalWeight + smallestEdge.weight;
+                    }//else do nothing cycle detected
+                    
+                }else{//vertexList contains u but not v
+                    vertexList.add( smallestEdge.v );
+                    verticesToComponent.put( smallestEdge.v, verticesToComponent.get(smallestEdge.u) );
+                    totalWeight = totalWeight + smallestEdge.weight;
+                    neighbors[smallestEdge.u].add(smallestEdge.v);
+                    neighbors[smallestEdge.v].add(smallestEdge.u);
                 }
             }else{
-                parent[tempEdge.u] = tempEdge.v;
-                
-                if( tempEdge.v < root){
-                    root = tempEdge.v;
+                if( vertexList.contains ( smallestEdge.v ) ){
+                    //contains v but not u
+                    neighbors[smallestEdge.u].add(smallestEdge.v);
+                    neighbors[smallestEdge.v].add(smallestEdge.u);
+                    vertexList.add( smallestEdge.u );
+                    verticesToComponent.put( smallestEdge.u, verticesToComponent.get( smallestEdge.v ) );
+                    totalWeight = totalWeight + smallestEdge.weight;
+                }else{
+                    //need to create a new component
+                    vertexList.add( smallestEdge.u);
+                    vertexList.add( smallestEdge.v);
+                    neighbors[smallestEdge.u].add(smallestEdge.v);
+                    neighbors[smallestEdge.v].add(smallestEdge.u);
+                    
+                    islandCount = islandCount + 1;
+                    verticesToComponent.put( smallestEdge.u, islandCount );
+                    verticesToComponent.put( smallestEdge.v, islandCount );
+                    componentToIsland.put( islandCount, smallestEdge.u );
+                    totalWeight = totalWeight + smallestEdge.weight;
                 }
             }
+            
         }
         
-        System.out.println(tempS + " " + totalWeight);
+        java.util.LinkedList<Integer> queue = new java.util.LinkedList<>();
+        
+        queue.offer(root);
+        
+        while( queue.size() > 0 ){
+            int fVal = queue.poll();
+            
+            while( neighbors[fVal].size() > 0){//breadth first search
+                int tempV = neighbors[fVal].removeFirst();//get the child
+                neighbors[tempV].remove(new Integer(fVal));//remove the link to the parent
+                queue.offer(tempV);//put the child to be proccessed
+                parent[ tempV ] = fVal;//record the parent
+            }
+        }
         
         return new MST(root, parent, totalWeight);
         
