@@ -60,14 +60,13 @@ public abstract class AbstractGraph implements Graph{
     
     protected AbstractGraph(int[][] edges, int numberOfVertices){
         vertices = new Integer[numberOfVertices];
-        
+        this.numberOfVertices = numberOfVertices;
         for(int i = 0; i < numberOfVertices; i = i + 1){
             vertices[i] = new Integer(i);
         }
         
         createAdjacencyLists(edges, numberOfVertices);
     }
-    
     
     private boolean isSame( java.util.List<Integer> edgeSet1, java.util.List<Integer> edgeSet2){
         if(edgeSet1 == null && edgeSet2 != null){
@@ -114,8 +113,6 @@ public abstract class AbstractGraph implements Graph{
             return false;
         }
     }
-    
-    
     
     private void createAdjacencyLists(int[][] edges, int numberOfVertices){
         neighbors = new java.util.LinkedList[numberOfVertices];

@@ -413,8 +413,10 @@ public class WeightedGraph extends AbstractGraph{
         public void printAllPaths(){
             System.out.println("All shortest paths from " + vertices[getRoot()] + " are: ");
             for ( int i = 0; i < costs.length; i = i + 1){
-                printPath(i);
-                System.out.println("(cost: " + costs[i] + ")");
+                if(this.getParent(i) != -1 || i == this.getRoot() ){
+                    printPath(i);
+                    System.out.println("(cost: " + costs[i] + ")");
+                }
             }
         }   
     }
@@ -617,6 +619,79 @@ public class WeightedGraph extends AbstractGraph{
         
         
         return new MST(sourceVertex ,parent, totalWeight);
+    }
+    
+    public ShortestPathTree getShortestPathMatrix(int sourceVertex){
+        int[] parent = new int[vertices.length];
+        int[] costs = new int[vertices.length];
+        
+        java.util.HashSet<Integer> toBeProcessed = new java.util.HashSet<>();
+        java.util.HashSet<Integer> seenBefore = new java.util.HashSet<>();
+        
+        for(int i = 0; i < vertices.length; i = i + 1){
+            parent[i] = -1;
+            costs[i] = -1;
+        }
+        
+        int[] indexFunction = new int[vertices.length];
+        
+        int rcVal = 0;
+        
+        for(int i = 0; i < indexFunction.length; i = i + 1){
+            if(vertices[i] != null){
+                indexFunction[i] = rcVal;
+                rcVal = rcVal + 1;
+            }else{
+                indexFunction[i] = -1;
+            }
+            parent[i] = -1;
+        }
+        
+        int[][] adjMatrix = getAdjacencyMatrix();
+        
+        
+        costs[sourceVertex] = 0;
+        
+        toBeProcessed.add(sourceVertex);
+        
+        while( toBeProcessed.size() > 0){
+            java.util.Iterator<Integer> iter = toBeProcessed.iterator();
+            int minVertex = iter.next();
+            
+            while( iter.hasNext() ){
+                int tempV = iter.next();
+                
+                if( costs[ tempV ] < costs[minVertex] ){
+                    minVertex = tempV;
+                }
+            }//now tempV has the vertex with the mimimal cost
+            
+            toBeProcessed.remove(minVertex);
+            seenBefore.add(minVertex);
+            
+            for(int i = 0; i < vertices.length; i = i + 1){
+                if( indexFunction[i] > -1 && !seenBefore.contains(i) && adjMatrix[ indexFunction[ minVertex ] ][ i ] > 0 ){
+                    toBeProcessed.add(i);
+                }
+                
+                
+                
+            }
+            //need to update previous vertices
+            
+            for(Integer element: toBeProcessed ){
+                if( adjMatrix[ indexFunction[ minVertex ] ][ element ] > 0 ){
+                    //update the costs
+                    if( costs[minVertex] + adjMatrix[ indexFunction[ minVertex ] ][ element ] < costs[ element ] || costs[ element ] < 0){
+                        costs[element ] = costs[minVertex] + adjMatrix[ indexFunction[ minVertex ] ][ element ];
+                        parent[ element ] = minVertex;
+                    }
+                }
+            }
+            
+        }
+        
+        return new ShortestPathTree(sourceVertex, parent, costs);
     }
     
     private int closestParent( java.util.Set<Integer> set, int vertex, int[][] adjMatrix, int[] indexFunction){
