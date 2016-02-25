@@ -24,10 +24,6 @@ public int getSize();
     public AbstractGraph.Tree bfs(int v);//bfs assumes that v does not have null neighbors
     public java.util.List<Integer> getHamiltonianCycle();
 
-Note:
-Currently Weighted Graph is not dynamic.
-
-That is add and remove are just stubs that return false and do nothing.
 
 
 
